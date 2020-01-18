@@ -1,11 +1,13 @@
 provide-module search-doc %~
 
+declare-option str search_doc_command "grep -RHnPo"
+
 # Search kakoune documentation.
 define-command search-doc \
     -params 1 \
     -docstring "search-doc <topic>: search kak documentation for a topic" \
     -shell-script-candidates %(
-        ag -o '^\*.*[^:](?=::)' "$kak_runtime/doc" |
+        $kak_opt_search_doc_command '^\*.*[^:](?=::)' "$kak_runtime/doc/"*.asciidoc |
             ruby -e '
                 strings_to_delete = ARGV;
                 puts STDIN.each_line.map {|line|;
