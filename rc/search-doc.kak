@@ -5,7 +5,7 @@ define-command search-doc \
     -params 1 \
     -docstring "search-doc <topic>: search kak documentation for a topic" \
     -shell-script-candidates %(
-        ag -o '^\*.*(?=::)' "$kak_runtime/doc" |
+        ag -o '^\*.*[^:](?=::)' "$kak_runtime/doc" |
             ruby -e '
                 strings_to_delete = ARGV;
                 puts STDIN.each_line.map {|line|;
@@ -13,7 +13,7 @@ define-command search-doc \
                     strings_to_delete.each {|s| needle.gsub!(s, "")};
                     "#{file}:#{needle}";
                 }
-            ' "::" "*" "\`" "'"
+            ' "*" "\`" "'"
     ) \
 %(
     search-doc-impl "%sh(printf ""%s"" ""${1%%:*}"")" "%sh(printf ""%s"" ""${1#*:}"")"
