@@ -1,6 +1,6 @@
 # search-doc.kak
 
-[![License](https://img.shields.io/github/license/jbomanso/search-doc.kak)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/github/license/jbomanson/search-doc.kak)](https://opensource.org/licenses/Apache-2.0)
 
 **search-doc.kak** is a [Kakoune](https://github.com/mawww/kakoune) plugin that
 provides a command for opening the kakoune documentation for a specific item.
