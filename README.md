@@ -11,7 +11,7 @@ and it comes with the advantages that
 
 - it shows completion options in a more informative way.
 
-![screenshot][docs/screenshot.png]
+![screenshot](docs/screenshot.png)
 
 ## Installation
 
