@@ -22,7 +22,9 @@ You can install **search-doc.kak** using the
 your `kakrc` with:
 
 ```kak
-plug "jbomanson/search-doc.kak"
+plug "jbomanson/search-doc.kak" config %{
+    require-module search-doc
+}
 ```
 
 Then restart Kakoune and run `:plug-install`.
