@@ -23,7 +23,7 @@ define-command search-doc \
 
 define-command search-doc-impl -hidden -params 2 %(
     doc "%arg(1)"
-    execute-keys "/^\Q%sh(echo ""$2"" | sed 's,<,SEARCH_DOC_LT,g; s,>,<gt>,g; s,SEARCH_DOC_LT,<lt>,g')\E<ret>vv"
+    execute-keys "/^\Q%sh(echo ""$2"" | sed 's,<,SEARCH_DOC_LT,g; s,>,<gt>,g; s,SEARCH_DOC_LT,<lt>,g')\E$<ret>vv"
 )
 
 ~
