@@ -9,12 +9,12 @@ define-command search-doc \
     -shell-script-candidates %(
         $kak_opt_search_doc_command '^\*.*[^:](?=::)' "$kak_runtime/doc/"*.asciidoc |
             ruby -e '
-                strings_to_delete = ["*", "`", "'"'"'"];
-                puts STDIN.each_line.map {|line|;
-                    everything, file, needle = /^.*\/(\w+)\.asciidoc:\d+:(.*)/.match(line).to_a;
-                    strings_to_delete.each {|s| needle.gsub!(s, "")};
-                    "#{file}:#{needle}";
-                };
+                strings_to_delete = ["*", "`", "'"'"'"]
+                puts STDIN.each_line.map {|line|
+                    everything, file, needle = /^.*\/(\w+)\.asciidoc:\d+:(.*)/.match(line).to_a
+                    strings_to_delete.each {|s| needle.gsub!(s, "")}
+                    "#{file}:#{needle}"
+                }
             '
     ) \
 %(
