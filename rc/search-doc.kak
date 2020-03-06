@@ -1,6 +1,13 @@
 provide-module search-doc %~
 
-declare-option str search_doc_command "grep -RHnPo"
+declare-option str search_doc_command %sh(
+    if which "ag" >/dev/null; then
+        printf "%s" "ag --only-matching --recurse --all-text"
+    else
+        printf "%s" "grep -RHnPo"
+    fi
+)
+
 declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak documentation for a topic"
 
 # A shell script that returns kakoune command parameter completion options,
