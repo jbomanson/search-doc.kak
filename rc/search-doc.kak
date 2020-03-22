@@ -14,7 +14,7 @@ declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak 
 # one option per line.
 declare-option -hidden str search_doc_candidates %(
     $kak_opt_search_doc_command '^\*.*[^:](?=::)' "$kak_runtime/doc/"*.asciidoc |
-        ruby -e '
+        ruby --disable-gems -e '
             strings_to_delete = ["*", "`", "'"'"'"]
             puts STDIN.each_line.map {|line|
                 everything, file, needle = /^.*\/(\w+)\.asciidoc:\d+:(.*)/.match(line).to_a
@@ -54,7 +54,7 @@ define-command search-doc-redefine -hidden %(
         # kak_opt_search_doc_command
         # kak_runtime
         eval "$kak_opt_search_doc_candidates" \
-            | ruby -e '
+            | ruby --disable-gems -e '
                 require "shellwords"
                 puts STDIN.readlines.map(&:chomp).shelljoin
             '
