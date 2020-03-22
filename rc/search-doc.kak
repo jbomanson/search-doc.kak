@@ -39,13 +39,16 @@ define-command search-doc \
 # The actual implementation of the 'search-doc' command.
 define-command search-doc-impl -hidden -params 1 \
 %(
-    search-doc-impl-impl "%sh(printf ""%s"" ""${1%%:*}"")" "%sh(printf ""%s"" ""${1#*:}"")"
+    search-doc-impl-impl %sh(printf "%s" "${1%%:*}") %sh(printf "%s" "${1#*:}")
 )
 
 # A helper command used by 'search-doc' to go to the desired documentation.
 define-command search-doc-impl-impl -hidden -params 2 %(
     doc "%arg(1)"
-    execute-keys "/^\Q%sh(echo ""$2"" | sed 's,<,SEARCH_DOC_LT,g; s,>,<gt>,g; s,SEARCH_DOC_LT,<lt>,g')\E$<ret>vv"
+    evaluate-commands %(
+        set-register / "^\Q%arg(2)\E$"
+        execute-keys /<ret>vv
+    )
 )
 
 # A helper command that precomputes parameter candidates and then overrides the
