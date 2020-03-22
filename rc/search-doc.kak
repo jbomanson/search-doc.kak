@@ -12,6 +12,7 @@ declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak 
 
 # A shell script that returns kakoune command parameter completion options,
 # one option per line.
+# This must be safe to include in %sh(...) expansions.
 declare-option -hidden str search_doc_candidates %(
     $kak_opt_search_doc_command '^\*.*[^:](?=::)' "$kak_runtime/doc/"*.asciidoc |
         ruby --disable-gems -e '
@@ -50,22 +51,15 @@ define-command search-doc-impl-impl -hidden -params 2 %(
 # A helper command that precomputes parameter candidates and then overrides the
 # 'search-doc' command to use those candidates.
 define-command search-doc-redefine -hidden %(
-    declare-option -hidden str search_doc_evaluated_candidates %sh(
-        # kak_opt_search_doc_command
-        # kak_runtime
-        eval "$kak_opt_search_doc_candidates" \
-            | ruby --disable-gems -e '
-                require "shellwords"
-                puts STDIN.readlines.map(&:chomp).shelljoin
-            '
-    )
+    evaluate-commands \
+        declare-option -hidden str search_doc_evaluated_candidates \
+            "%%sh(%opt(search_doc_candidates))"
     define-command search-doc \
         -params 1 \
         -docstring "%opt(search_doc_docstring)" \
         -override \
         -shell-script-candidates %(
-            eval set -- "$kak_opt_search_doc_evaluated_candidates"
-            printf "%s\n" "$@"
+            printf "%s\n" "$kak_opt_search_doc_evaluated_candidates"
         ) %(search-doc-impl %arg(@))
 )
 
