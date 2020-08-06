@@ -1,7 +1,7 @@
 provide-module search-doc %~
 
 declare-option str search_doc_command %sh(
-    if which "ag" >/dev/null; then
+    if command -v "ag" >/dev/null 2>/dev/null; then
         printf "%s" "ag --only-matching --recurse --all-text"
     else
         printf "%s" "grep -RHnPo"
