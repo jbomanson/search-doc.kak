@@ -13,12 +13,18 @@ declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak 
 # A shell script that returns kakoune command parameter completion options,
 # one option per line.
 # This must be safe to include in %sh(...) expansions.
+# See also: %val(runtime)/tools/doc.kak
 declare-option -hidden str search_doc_candidates %(
-    $kak_opt_search_doc_command '^\*.*[^:](?=::)' "$kak_runtime/doc/"*.asciidoc |
+    find -L \
+        "${kak_config}/autoload/" \
+        "${kak_runtime}/doc/" \
+        "${kak_runtime}/rc/" \
+        -type f -name "*.asciidoc" \
+        -exec $kak_opt_search_doc_command '^\*.*[^:](?=::)' '{}' + |
         ruby --disable-gems -e '
             strings_to_delete = ["*", "`", "'"'"'"]
             puts STDIN.each_line.map {|line|
-                everything, file, needle = /^.*\/(\w+)\.asciidoc:\d+:(.*)/.match(line).to_a
+                _, file, needle = /^.*\/(.*?)\.asciidoc:\d+:(.*)/.match(line).to_a
                 strings_to_delete.each {|s| needle.gsub!(s, "")}
                 "#{file}:#{needle}"
             }
