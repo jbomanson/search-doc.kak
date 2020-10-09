@@ -1,0 +1,28 @@
+= search-doc.kak
+
+**search-doc.kak** is a [Kakoune](https://github.com/mawww/kakoune) plugin that
+provides a command for opening the kakoune documentation for a specific item.
+The command, `:search-doc`, is an alternative to the built in command `:doc`
+and it comes with the advantages that
+
+- it jumps to a much more detailed location, and
+
+- it shows completion options in a more informative way.
+
+== Commands
+
+*search-doc* <topic>::
+    display documentation about a topic. The completion list displays the
+    available topics
+
+The following command jumps to the documentation for the key `f`:
+
+-------------------------------------
+:search-doc keys:f
+-------------------------------------
+
+The following command jumps to the documentation for the command `alias`:
+
+-------------------------------------
+:search-doc 'commands:alias <scope> <name> <command>'
+-------------------------------------
