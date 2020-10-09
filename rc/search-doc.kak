@@ -20,14 +20,27 @@ declare-option -hidden str search_doc_candidates %(
         "${kak_runtime}/doc/" \
         "${kak_runtime}/rc/" \
         -type f -name "*.asciidoc" \
-        -exec $kak_opt_search_doc_command '^\*.*[^:](?=::)' '{}' + |
+        -exec $kak_opt_search_doc_command '^\*.*[^:](?=::)|^=+ .*' '{}' + |
         ruby --disable-gems -e '
             strings_to_delete = ["*", "`", "'"'"'"]
-            puts STDIN.each_line.map {|line|
-                _, file, needle = /^.*\/(.*?)\.asciidoc:\d+:(.*)/.match(line).to_a
-                strings_to_delete.each {|s| needle.gsub!(s, "")}
-                "#{file}:#{needle}"
-            }
+            puts(
+                STDIN.each_line.map do |line|
+                    /^.*\/(.*?)\.asciidoc:\d+:(.*)/.match(line).to_a[1..-1]
+                end.group_by(&:first).flat_map do |file, file_and_content_pairs|
+                    most_recent_title = nil
+                    file_and_content_pairs.map do |_, content|
+                        if title = content[/^=+ (.*)/, 1]
+                            most_recent_title = title
+                            nil
+                        elsif most_recent_title
+                            strings_to_delete.each {|s| content.gsub!(s, "")}
+                            [file, content, most_recent_title]
+                        end
+                    end.compact
+                end.map do |file, content, title|
+                    "#{content} (#{file}: #{title})"
+                end.to_a
+            )
         '
 )
 
@@ -44,15 +57,32 @@ define-command search-doc \
 
 # The actual implementation of the 'search-doc' command.
 define-command search-doc-impl -hidden -params 1 \
-%(
-    search-doc-impl-impl %sh(printf "%s" "${1%%:*}") %sh(printf "%s" "${1#*:}")
-)
+%[
+    search-doc-impl-impl %sh[
+        content_and_title="${1##* (}"
+        content_and_title="${content_and_title%)}"
+        printf "%s" "${content_and_title%: *}"
+    ] %sh[
+        content_and_title="${1##* (}"
+        content_and_title="${content_and_title%)}"
+        printf "%s" "${content_and_title##*: }"
+    ] %sh[
+        printf "%s" "${1% (*}"
+    ]
+]
 
 # A helper command used by 'search-doc' to go to the desired documentation.
-define-command search-doc-impl-impl -hidden -params 2 %(
+# Arguments: <filename> <coarse-topic> <fine-topic>
+define-command search-doc-impl-impl -hidden -params 3 %(
     doc "%arg(1)"
     evaluate-commands %(
-        set-register / "^\Q%arg(2)\E$"
+        try %(
+            # At the time of writing, this fails for (mapping: Mappable keys), which is
+            # curiously missing from rendered kakoune documentation.
+            set-register / "^\Q%arg(2)\E$"
+            execute-keys /<ret>
+        )
+        set-register / "^\Q%arg(3)\E$"
         execute-keys /<ret>vv
     )
 )
