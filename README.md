@@ -13,6 +13,10 @@ and it comes with the advantages that
 
 ![screenshot](docs/screenshot.png)
 
+## Dependencies
+
+- ruby
+
 ## Installation
 
 ### With plug.kak
