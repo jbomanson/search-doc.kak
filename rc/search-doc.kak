@@ -7,11 +7,19 @@ declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak 
 # This must be safe to include in %sh(...) expansions.
 # See also: %val(runtime)/tools/doc.kak
 declare-option -hidden str search_doc_candidates %(
-    find -L \
+    set --
+    for directory in \
         "${kak_config}/autoload/" \
         "${kak_runtime}/doc/" \
-        "${kak_runtime}/rc/" \
-        -type f -name "*.asciidoc" |
+        "${kak_runtime}/rc/"
+    do
+        test -d "$directory" && set -- "$@" "$directory"
+    done
+    if test $# -eq 0; then
+        printf '%s\n' 'search-doc: found no documentation files'
+        exit 1
+    fi | tee /dev/stderr
+    find -L "$@" -type f -name "*.asciidoc" |
         ruby --disable-gems -e '
             strings_to_delete = ["*", "`", "'"'"'"]
             puts(
