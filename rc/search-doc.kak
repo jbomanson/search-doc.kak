@@ -1,13 +1,5 @@
 provide-module search-doc %~
 
-declare-option str search_doc_command %sh(
-    if command -v "ag" >/dev/null 2>/dev/null; then
-        printf "%s" "ag --only-matching --recurse --all-text"
-    else
-        printf "%s" "grep -RHnPo"
-    fi
-)
-
 declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak documentation for a topic"
 
 # A shell script that returns kakoune command parameter completion options,
@@ -19,27 +11,28 @@ declare-option -hidden str search_doc_candidates %(
         "${kak_config}/autoload/" \
         "${kak_runtime}/doc/" \
         "${kak_runtime}/rc/" \
-        -type f -name "*.asciidoc" \
-        -exec $kak_opt_search_doc_command '^\*.*[^:](?=::)|^=+ .*' '{}' + |
+        -type f -name "*.asciidoc" |
         ruby --disable-gems -e '
             strings_to_delete = ["*", "`", "'"'"'"]
             puts(
-                STDIN.each_line.map do |line|
-                    /^.*\/(.*?)\.asciidoc:\d+:(.*)/.match(line).to_a[1..-1]
-                end.group_by(&:first).flat_map do |file, file_and_content_pairs|
-                    most_recent_title = nil
-                    file_and_content_pairs.map do |_, content|
-                        if title = content[/^=+ (.*)/, 1]
-                            most_recent_title = title
-                            nil
-                        elsif most_recent_title
-                            strings_to_delete.each {|s| content.gsub!(s, "")}
-                            [file, content, most_recent_title]
-                        end
-                    end.compact
-                end.map do |file, content, title|
-                    "#{content} (#{file}: #{title})"
-                end.to_a
+              STDIN.each_line(chomp: true).flat_map do |filename|
+                simplified_file = filename[/([^\/]*)\.asciidoc$/, 1]
+                most_recent_title = nil
+                File.open(filename) do |io|
+                  io.each_line.map do |content|
+                    next unless content = content[/^\*.*[^:](?=::)|^=+ .*/]
+                    if title = content[/^=+ (.*)/, 1]
+                      most_recent_title = title
+                      nil
+                    elsif most_recent_title
+                      strings_to_delete.each {|s| content.gsub!(s, "")}
+                      [simplified_file, content, most_recent_title]
+                    end
+                  end.compact
+                end
+              end.map do |simplified_file, content, title|
+                "#{content} (#{simplified_file}: #{title})"
+              end.to_a
             )
         '
 )
