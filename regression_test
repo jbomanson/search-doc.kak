@@ -1,0 +1,107 @@
+#! /bin/sh
+
+usage ()
+{
+    cat <<EOF
+usage: ${0##*/} <output_dir>
+
+This is a script that gathers and prints some information regarding search-doc
+to a given output directory. That information is intended to be useful when
+comparing different version of search-doc.
+
+Example:
+
+    $ git checkout <some-commit>
+    $ ./regression_test /tmp/search-doc-1
+    $ git checkout <some-other-commit>
+    $ ./regression_test /tmp/search-doc-2
+    $ git diff --no-index /tmp/search-doc-{1,2}
+    $ rm -rf /tmp/search-doc-{1,2}
+EOF
+}
+
+#==============================================================================
+
+# A helper function that runs kakoune with the given configuration and afterward writes the
+# kakoune stdout, stderr, and the contents of the kakoune *debug* buffer to separate files.
+#
+# Usage: kak_evaluate <name> <command>
+kak_evaluate ()
+{
+    evaluate_dir="$output_dir/$1"
+    export evaluate_dir
+    mkdir "$evaluate_dir" || return 1
+    kak -n -ui dummy -e "
+        try %(
+            $2
+        ) catch %(
+            echo -debug %val(error)
+        )
+        try %(
+            # Print the contents of the debug buffer.
+            buffer *debug*
+            execute-keys <percent>
+            write \"%val(client_env_evaluate_dir)/debug\"
+        )
+        quit
+    " >"$evaluate_dir/out" 2>"$evaluate_dir/err"
+    for file in "$evaluate_dir/out" "$evaluate_dir/err"
+    do
+        if ! test -s "$file"; then
+            rm -f "$file"
+        fi
+    done
+}
+
+set -e
+{
+    if test $# -ne 1; then
+        usage
+        exit 1
+    fi >&2
+
+    output_dir="$1"
+    test "${output_dir#/}" = "$output_dir" && output_dir="$PWD/${output_dir#/}"
+    export output_dir
+    mkdir -p "$output_dir"
+
+    cd "${0%/*}"
+}
+set +e
+
+kak -version >"$output_dir"/kak.version 2>"$output_dir"/kak.version.err
+
+config='
+evaluate-commands %sh(
+    find -L \
+            "${kak_config}/autoload/" \
+            "${kak_runtime}/doc/" \
+            "${kak_runtime}/rc/" \
+            -name "doc.kak" \
+            -printf "source %p"
+)
+'
+kak_evaluate 0-source-doc "$config"
+
+config="$config
+source rc/search-doc.kak"
+kak_evaluate 1-source-search-doc "$config"
+
+config="$config
+require-module search-doc"
+kak_evaluate 2-require "$config"
+
+config="$config
+search-doc 'a (keys: Changes)'"
+kak_evaluate 3-call "$config"
+
+config="$config
+echo -to-file \"%val(client_env_evaluate_dir)/search_doc_evaluated_candidates\" \
+        \"%opt(search_doc_evaluated_candidates)\""
+kak_evaluate 4-candidates "$config"
+
+file="$output_dir/4-candidates/search_doc_evaluated_candidates"
+if test -f "$file"; then
+    sort "$file" >"$file.tmp"
+    mv "$file.tmp" "$file"
+fi
