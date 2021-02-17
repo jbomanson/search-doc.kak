@@ -21,8 +21,7 @@ For example, the following command jumps to documentation for the key 'a'
 :sd 'a (keys: Changes)'
 -------------------------------------
 
-The following command jumps to the documentation for the command `alias`:
+== Options
 
--------------------------------------
-:search-doc 'commands:alias <scope> <name> <command>'
--------------------------------------
+*search_doc_path* `str-list`::
+    A list of directories from where search-doc looks for documentation recursively.

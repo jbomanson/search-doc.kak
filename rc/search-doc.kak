@@ -1,5 +1,17 @@
 provide-module search-doc %~
 
+declare-option \
+    -docstring 'A list of directories from where search-doc looks for documentation recursively' \
+    str-list search_doc_path \
+    "%val(config)/autoload" \
+    "%val(runtime)/doc" \
+    "%val(runtime)/rc"
+
+evaluate-commands %sh(
+    test -d "$kak_opt_plug_install_dir" &&
+        printf "%s" 'set-option -add global search_doc_path "%opt(plug_install_dir)"'
+)
+
 declare-option -hidden str search_doc_docstring "search-doc <topic>: search kak documentation for a topic"
 
 # A shell script that must be safe to include in %sh(...)-expansions.
@@ -8,12 +20,8 @@ declare-option -hidden str search_doc_script %(
     get_directories_0 ()
     {
         local some=
-        set --
-        for directory in \
-            "${kak_config}/autoload" \
-            "${kak_runtime}/doc" \
-            "${kak_runtime}/rc" \
-            "${kak_opt_plug_install_dir}"
+        eval set -- "$kak_quoted_opt_search_doc_path"
+        for directory
         do
             if test -d "$directory"; then
                 printf '%s\0' "$directory"
