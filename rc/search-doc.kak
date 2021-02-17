@@ -12,7 +12,8 @@ declare-option -hidden str search_doc_script %(
         for directory in \
             "${kak_config}/autoload" \
             "${kak_runtime}/doc" \
-            "${kak_runtime}/rc"
+            "${kak_runtime}/rc" \
+            "${kak_opt_plug_install_dir}"
         do
             if test -d "$directory"; then
                 printf '%s\0' "$directory"
