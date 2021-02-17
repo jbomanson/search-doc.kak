@@ -22,7 +22,7 @@ and it comes with the advantages that
 ### With plug.kak
 
 You can install **search-doc.kak** using the
-[plug.kak](https://github.com/andreyorst/plug.kak) plugin manager by extending
+[plug.kak](https://github.com/robertmeta/plug.kak) plugin manager by extending
 your `kakrc` with:
 
 ```kak
